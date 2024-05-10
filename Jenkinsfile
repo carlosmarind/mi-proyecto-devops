@@ -26,6 +26,7 @@ pipeline {
                 }
             }
         }
+
         stage("code quality") {
             stages {
                 stage("build & SonarQube analysis") {
@@ -52,9 +53,26 @@ pipeline {
             }
         }
 
-        stage('hacer build') {
+        stage('delivery to docker') {
             steps {
-                sh 'docker build -t mi-proyecto-devops .'
+                script {
+                    docker.withRegistry('http://localhost:8082', 'nexus-key') {
+                        sh 'docker build -t localhost:8082/mi-proyecto-devops .'
+                        sh "docker tag localhost:8082/mi-proyecto-devops localhost:8082/mi-proyecto-devops:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+                        sh 'docker push localhost:8082/mi-proyecto-devops'
+                        sh "docker push localhost:8082/mi-proyecto-devops:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+                    }
+                }
+            }
+        }
+        stage('deploy to compose') {
+            steps {
+                script {
+                    docker.withRegistry('http://localhost:8082', 'nexus-key') {
+                        sh 'docker-compose pull'
+                        sh "docker-compose up --force-recreate --build -d"
+                    }
+                }
             }
         }
     }
