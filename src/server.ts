@@ -1,5 +1,6 @@
 import express from "express";
 import { dividir, multiplicar, restar, sumar } from "./calcular.js";
+import { apiKey } from "./environment.js";
 
 const app = express();
 
@@ -29,5 +30,8 @@ app.get("/ambiente", (req, res) => {
   res.send(`El ambiente actual es: ${ambiente}`);
 });
 
+app.get("/mi-api", (req, res) => {
+  return res.send({ apiKey });
+});
 
 export default app;
